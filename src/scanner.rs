@@ -1,7 +1,5 @@
 use serde::Serialize;
 use std::path::Path;
-use std::process::Output;
-use tokio::process::Command;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub enum Severity {
@@ -30,6 +28,7 @@ pub enum Category {
     Deps,
     SupplyChain,
     Sast,
+    Obfuscation,
 }
 
 impl std::fmt::Display for Category {
@@ -39,6 +38,7 @@ impl std::fmt::Display for Category {
             Category::Deps => write!(f, "deps"),
             Category::SupplyChain => write!(f, "supply-chain"),
             Category::Sast => write!(f, "sast"),
+            Category::Obfuscation => write!(f, "obfuscation"),
         }
     }
 }
@@ -58,20 +58,12 @@ pub struct Finding {
 pub struct ScanResult {
     pub scanner: String,
     pub category: Category,
-    pub success: bool,
     pub findings: Vec<Finding>,
-    pub error: Option<String>,
     pub duration_ms: u128,
 }
 
 pub trait Scanner: Send + Sync {
     fn name(&self) -> &str;
-    fn binary(&self) -> &str;
     fn category(&self) -> Category;
-    fn is_available(&self) -> bool {
-        which::which(self.binary()).is_ok()
-    }
-    fn install_hint(&self) -> &str;
-    fn build_command(&self, target: &Path) -> Command;
-    fn parse_output(&self, output: &Output) -> Vec<Finding>;
+    fn scan(&self, target: &Path) -> Vec<Finding>;
 }

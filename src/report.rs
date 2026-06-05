@@ -32,9 +32,7 @@ pub fn print_report(results: &[ScanResult], min_severity: &str) {
     let mut high_or_above = 0;
 
     for result in results {
-        let status = if !result.success {
-            "SKIP".yellow()
-        } else if result.findings.is_empty() {
+        let status = if result.findings.is_empty() {
             "PASS".green()
         } else {
             "WARN".red()
@@ -47,10 +45,6 @@ pub fn print_report(results: &[ScanResult], min_severity: &str) {
             result.category,
             result.duration_ms
         );
-
-        if let Some(err) = &result.error {
-            println!("       {}", err.dimmed());
-        }
 
         let filtered: Vec<_> = result
             .findings
@@ -90,12 +84,9 @@ pub fn print_report(results: &[ScanResult], min_severity: &str) {
 
     println!();
     println!("{}", "─── summary ───".dimmed());
-    let scanners_run = results.iter().filter(|r| r.success).count();
-    let scanners_skipped = results.iter().filter(|r| !r.success).count();
     println!(
-        "  scanners: {} run, {} skipped",
-        scanners_run.to_string().bold(),
-        scanners_skipped
+        "  scanners: {} run",
+        results.len().to_string().bold(),
     );
     println!(
         "  findings: {} total, {} high/critical",

@@ -1,8 +1,8 @@
 [package]
 name = "ksec"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
-description = "Unified security scanner CLI — orchestrates gitleaks, trufflehog, trivy, osv-scanner, opengrep, socket"
+description = "Self-contained security scanner CLI — secrets, deps, supply chain, SAST, obfuscation"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
@@ -11,4 +11,11 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 colored = "3"
 indicatif = "0.17"
-which = "7"
+regex = "1"
+ignore = "0.4"
+ureq = { version = "3", features = ["json"] }
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1

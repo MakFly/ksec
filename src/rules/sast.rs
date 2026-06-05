@@ -1,0 +1,150 @@
+use crate::scanner::Severity;
+use regex::Regex;
+
+pub struct SastRule {
+    pub id: &'static str,
+    pub description: &'static str,
+    pub severity: Severity,
+    pub regex: Regex,
+    pub extensions: &'static [&'static str],
+}
+
+const JS_TS: &[&str] = &["js", "jsx", "ts", "tsx", "mjs", "cjs"];
+const PY: &[&str] = &["py"];
+const PHP: &[&str] = &["php"];
+const ALL_WEB: &[&str] = &["js", "jsx", "ts", "tsx", "mjs", "cjs", "py", "php", "rb", "go", "rs"];
+
+pub fn sast_rules() -> Vec<SastRule> {
+    use Severity::*;
+
+    let defs: Vec<(&str, &str, Severity, &str, &[&str])> = vec![
+        // SQL Injection
+        ("sql-injection-concat", "SQL injection - string concatenation in query", High,
+            r#"(?i)(?:execute|query|prepare|raw)\s*\(\s*[`'"]\s*(?:SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE)\b[^`'"]*\$\{"#,
+            JS_TS),
+        ("sql-injection-fstring", "SQL injection - f-string in query", High,
+            r#"(?i)(?:execute|cursor\.execute|\.query)\s*\(\s*f['"]\s*(?:SELECT|INSERT|UPDATE|DELETE)\b"#,
+            PY),
+        ("sql-injection-format", "SQL injection - .format() in query", High,
+            r#"(?i)(?:execute|cursor\.execute)\s*\(\s*['"].*(?:SELECT|INSERT|UPDATE|DELETE)\b.*['"]\.format\s*\("#,
+            PY),
+        ("sql-injection-concat-php", "SQL injection - concatenation in PHP query", High,
+            r#"(?i)\$(?:pdo|conn|db|mysqli)->(?:query|prepare|exec)\s*\(\s*['"].*\.\s*\$"#,
+            PHP),
+
+        // XSS
+        ("xss-innerhtml", "XSS - innerHTML assignment", High,
+            r#"\.innerHTML\s*="#,
+            JS_TS),
+        ("xss-dangerously-set", "XSS - dangerouslySetInnerHTML", High,
+            r#"dangerouslySetInnerHTML"#,
+            JS_TS),
+        ("xss-document-write", "XSS - document.write()", Medium,
+            r#"document\.write\s*\("#,
+            JS_TS),
+        ("xss-outerhtml", "XSS - outerHTML assignment", High,
+            r#"\.outerHTML\s*="#,
+            JS_TS),
+
+        // Command Injection
+        ("cmd-injection-exec", "Command injection - exec/execSync with variable", Critical,
+            r#"(?:exec|execSync)\s*\(\s*(?:`[^`]*\$\{|['"][^'"]*\s*\+)"#,
+            JS_TS),
+        ("cmd-injection-spawn", "Command injection - spawn with user input", High,
+            r#"(?:spawn|spawnSync)\s*\(\s*(?:req\.|params\.|query\.|body\.)"#,
+            JS_TS),
+        ("cmd-injection-os-system", "Command injection - os.system with variable", Critical,
+            r#"os\.system\s*\(\s*f['\"]"#,
+            PY),
+        ("cmd-injection-subprocess", "Command injection - subprocess with shell=True", High,
+            r#"subprocess\.(?:call|run|Popen)\s*\([^)]*shell\s*=\s*True"#,
+            PY),
+        ("cmd-injection-php", "Command injection - PHP exec/system/passthru", Critical,
+            r#"(?:exec|system|passthru|shell_exec|popen|proc_open)\s*\(\s*\$"#,
+            PHP),
+
+        // Path Traversal
+        ("path-traversal-join", "Path traversal - user input in file path", High,
+            r#"(?:readFile|readFileSync|createReadStream|writeFile|writeFileSync)\s*\([^)]*(?:req\.|params\.|query\.|body\.)"#,
+            JS_TS),
+        ("path-traversal-open", "Path traversal - open() with user input", High,
+            r#"open\s*\(\s*(?:request\.|f['"'])"#,
+            PY),
+
+        // Insecure Crypto
+        ("insecure-crypto-md5", "Insecure hash - MD5", Medium,
+            r#"(?:createHash|hashlib\.md5|MD5|md5)\s*\(\s*['"']?md5"#,
+            ALL_WEB),
+        ("insecure-crypto-sha1", "Insecure hash - SHA1", Medium,
+            r#"(?:createHash|hashlib\.sha1|SHA1)\s*\(\s*['"']?sha1"#,
+            ALL_WEB),
+        ("insecure-crypto-des", "Insecure cipher - DES", High,
+            r#"(?i)(?:createCipher|DES|des-ecb|des-cbc)\b"#,
+            ALL_WEB),
+        ("insecure-crypto-ecb", "Insecure mode - ECB", High,
+            r#"(?i)(?:ECB|aes-.*-ecb)\b"#,
+            ALL_WEB),
+        ("insecure-random", "Insecure random - Math.random for security", High,
+            r#"Math\.random\s*\(\s*\).*(?i)(?:token|secret|password|key|salt|nonce|iv|csrf)"#,
+            JS_TS),
+
+        // Open Redirect
+        ("open-redirect", "Open redirect - unvalidated redirect", Medium,
+            r#"(?:res\.redirect|redirect)\s*\(\s*(?:req\.|params\.|query\.)"#,
+            JS_TS),
+
+        // SSRF
+        ("ssrf-fetch", "SSRF - fetch/request with user-controlled URL", High,
+            r#"(?:fetch|axios\.get|https?\.get|got|request)\s*\(\s*(?:req\.|params\.|query\.|body\.)"#,
+            JS_TS),
+        ("ssrf-python", "SSRF - requests with user-controlled URL", High,
+            r#"requests\.(?:get|post|put|delete)\s*\(\s*(?:request\.|f['"'])"#,
+            PY),
+
+        // Deserialization
+        ("unsafe-deserialization-pickle", "Unsafe deserialization - pickle.loads", Critical,
+            r#"pickle\.loads?\s*\("#,
+            PY),
+        ("unsafe-deserialization-yaml", "Unsafe deserialization - yaml.load without SafeLoader", High,
+            r#"yaml\.load\s*\([^)]*\)"#,
+            PY),
+        ("unsafe-deserialization-php", "Unsafe deserialization - unserialize with user input", Critical,
+            r#"unserialize\s*\(\s*\$"#,
+            PHP),
+
+        // Hardcoded Crypto
+        ("hardcoded-iv", "Hardcoded initialization vector", Medium,
+            r#"(?i)(?:iv|initialization.?vector)\s*[:=]\s*['"][^'"]{8,}['"]"#,
+            ALL_WEB),
+        ("hardcoded-salt", "Hardcoded salt value", Medium,
+            r#"(?i)salt\s*[:=]\s*['"][^'"]{4,}['"]"#,
+            ALL_WEB),
+
+        // CORS
+        ("cors-wildcard", "CORS wildcard - Access-Control-Allow-Origin: *", Medium,
+            r#"(?i)access-control-allow-origin['":\s]*\*"#,
+            ALL_WEB),
+
+        // Prototype Pollution
+        ("prototype-pollution", "Prototype pollution - __proto__ assignment", High,
+            r#"__proto__\s*[=\[]"#,
+            JS_TS),
+
+        // NoSQL Injection
+        ("nosql-injection", "NoSQL injection - operator from user input", High,
+            r#"(?:\$where|\$gt|\$ne|\$regex)\s*:\s*(?:req\.|params\.|query\.|body\.)"#,
+            JS_TS),
+    ];
+
+    defs.into_iter()
+        .filter_map(|(id, desc, sev, pat, ext)| {
+            Regex::new(pat).ok().map(|regex| SastRule {
+                id,
+                description: desc,
+                severity: sev,
+                regex,
+                extensions: ext,
+            })
+        })
+        .collect()
+}

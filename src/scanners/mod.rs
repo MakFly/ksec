@@ -1,45 +1,38 @@
-pub mod bun_audit;
-pub mod gitleaks;
-pub mod opengrep;
-pub mod osv;
-pub mod socket;
-pub mod trivy;
-pub mod trufflehog;
+pub mod deps;
+pub mod obfuscation;
+pub mod sast;
+pub mod secrets;
+pub mod supply_chain;
 
 use crate::scanner::Scanner;
 use std::sync::Arc;
 
 pub fn all_scanners() -> Vec<Arc<dyn Scanner>> {
     vec![
-        Arc::new(gitleaks::Gitleaks),
-        Arc::new(trufflehog::TruffleHog),
-        Arc::new(trivy::Trivy),
-        Arc::new(osv::OsvScanner),
-        Arc::new(bun_audit::BunAudit),
-        Arc::new(opengrep::OpenGrep),
-        Arc::new(socket::SocketCli),
+        Arc::new(secrets::SecretsScanner),
+        Arc::new(deps::DepsScanner),
+        Arc::new(supply_chain::SupplyChainScanner),
+        Arc::new(sast::SastScanner),
+        Arc::new(obfuscation::ObfuscationScanner),
     ]
 }
 
 pub fn secrets_scanners() -> Vec<Arc<dyn Scanner>> {
-    vec![
-        Arc::new(gitleaks::Gitleaks),
-        Arc::new(trufflehog::TruffleHog),
-    ]
+    vec![Arc::new(secrets::SecretsScanner)]
 }
 
 pub fn deps_scanners() -> Vec<Arc<dyn Scanner>> {
-    vec![
-        Arc::new(trivy::Trivy),
-        Arc::new(osv::OsvScanner),
-        Arc::new(bun_audit::BunAudit),
-    ]
+    vec![Arc::new(deps::DepsScanner)]
 }
 
 pub fn sast_scanners() -> Vec<Arc<dyn Scanner>> {
-    vec![Arc::new(opengrep::OpenGrep)]
+    vec![Arc::new(sast::SastScanner)]
 }
 
 pub fn supply_chain_scanners() -> Vec<Arc<dyn Scanner>> {
-    vec![Arc::new(socket::SocketCli)]
+    vec![Arc::new(supply_chain::SupplyChainScanner)]
+}
+
+pub fn obfuscation_scanners() -> Vec<Arc<dyn Scanner>> {
+    vec![Arc::new(obfuscation::ObfuscationScanner)]
 }

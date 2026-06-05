@@ -1,10 +1,12 @@
 mod cli;
-mod doctor;
 mod init;
+mod lockfile;
 mod report;
+mod rules;
 mod runner;
 mod scanner;
 mod scanners;
+mod walk;
 
 use clap::Parser;
 use cli::{Cli, Commands};
@@ -19,9 +21,6 @@ async fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Doctor) => {
-            doctor::run_doctor();
-        }
         Some(Commands::Init { force }) => {
             init::run_init(*force);
         }
@@ -39,6 +38,9 @@ async fn main() {
         }
         Some(Commands::SupplyChain { path }) => {
             run_scan(scanners::supply_chain_scanners(), &resolve_path(path), &cli).await;
+        }
+        Some(Commands::Obfuscation { path }) => {
+            run_scan(scanners::obfuscation_scanners(), &resolve_path(path), &cli).await;
         }
         None => {
             run_scan(scanners::all_scanners(), &resolve_path(&cli.path), &cli).await;

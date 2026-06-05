@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "ksec", version, about = "Unified security scanner CLI")]
+#[command(name = "ksec", version, about = "Self-contained security scanner — secrets, deps, supply chain, SAST, obfuscation")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -22,34 +22,36 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Run all scanners
+    /// Run all scanners (secrets + deps + supply-chain + sast + obfuscation)
     Scan {
-        /// Target directory
         #[arg(default_value = ".")]
         path: PathBuf,
     },
-    /// Scan for leaked secrets (gitleaks + trufflehog)
+    /// Detect leaked secrets (150+ regex rules — API keys, tokens, private keys, DB URIs)
     Secrets {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
-    /// Scan dependencies for vulnerabilities (trivy + osv-scanner + bun audit)
+    /// Check dependencies for known vulnerabilities (parses lockfiles, queries OSV API)
     Deps {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
-    /// Static analysis for security (opengrep)
+    /// Static analysis — OWASP Top 10 (SQLi, XSS, command injection, SSRF, etc.)
     Sast {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
-    /// Supply chain analysis (socket)
+    /// Detect suspicious patterns in packages (eval, network exfil, obfuscation, malicious scripts)
     SupplyChain {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
-    /// Check installed scanners and install missing ones
-    Doctor,
+    /// Detect obfuscated code in config files (long lines, global[], hex payloads)
+    Obfuscation {
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
     /// Generate lefthook.yml for pre-commit hooks
     Init {
         /// Overwrite existing lefthook.yml
