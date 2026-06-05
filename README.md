@@ -36,6 +36,12 @@ $ ksec scan .
 
 ## Install
 
+### One-liner (Linux / macOS)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MakFly/ksec/master/install.sh | sh
+```
+
 ### From source (Rust)
 
 ```bash
@@ -45,9 +51,9 @@ cargo build --release
 cp target/release/ksec ~/.local/bin/
 ```
 
-### Pre-built binary
+### Pre-built binaries
 
-Check the [Releases](https://github.com/MakFly/ksec/releases) page.
+Binaries for Linux (x86_64, aarch64) and macOS (x86_64, aarch64) are available on the [Releases](https://github.com/MakFly/ksec/releases) page.
 
 ## Usage
 
