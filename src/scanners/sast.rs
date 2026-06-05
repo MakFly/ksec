@@ -14,6 +14,11 @@ const SKIP_PATH_SEGMENTS: &[&str] = &[
     "docs", "migrations",
 ];
 
+const SKIP_FILES: &[&str] = &[
+    "chart.tsx",
+    "json-ld.tsx",
+];
+
 fn should_skip_path(path: &str) -> bool {
     let lower = path.to_lowercase();
     SKIP_PATH_SEGMENTS
@@ -28,6 +33,9 @@ fn should_skip_path(path: &str) -> bool {
         || lower.contains(".min.")
         || lower.ends_with(".d.ts")
         || lower.ends_with(".map")
+        || lower.ends_with(".mdx")
+        || lower.ends_with(".md")
+        || SKIP_FILES.iter().any(|f| lower.ends_with(f))
 }
 
 fn should_skip_line(line: &str) -> bool {

@@ -2,24 +2,35 @@ use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
 
 const SKIP_DIRS: &[&str] = &[
+    // package managers
     "node_modules",
-    ".git",
     "vendor",
-    "dist",
-    "build",
-    ".next",
-    "__pycache__",
-    "target",
     ".venv",
     "venv",
     ".tox",
+
+    // build outputs
+    "dist",
+    "build",
+    ".next",
+    ".nuxt",
+    ".output",
+    "target",
+    "__pycache__",
     "coverage",
     ".nyc_output",
+
+    // VCS
+    ".git",
+
+    // IDE / editor runtimes
     ".cursor-server",
     ".vscode-server",
     ".vscode",
     ".cursor",
     ".idea",
+
+    // tool caches (pure noise, no user code)
     ".cache",
     ".local",
     ".npm",
@@ -27,6 +38,30 @@ const SKIP_DIRS: &[&str] = &[
     ".cargo",
     ".rustup",
     "snap",
+    ".oh-my-zsh",
+    ".codex",
+    ".nvm",
+    ".pyenv",
+    ".gradle",
+    ".m2",
+    ".docker",
+
+    // Go module cache (library code, not user code)
+    "pkg",
+
+    // browser internals
+    "google-chrome",
+    "chromium",
+    "firefox",
+    "BraveSoftware",
+
+    // Claude Code internals (history, plugins, sessions)
+    "file-history",
+    "plugins",
+    "worktrees",
+
+    // auto-generated docs
+    ".next-docs",
 ];
 
 const BINARY_EXTENSIONS: &[&str] = &[

@@ -53,9 +53,10 @@ const SKIP_FILES: &[&str] = &[
 ];
 
 const SKIP_EXTENSIONS: &[&str] = &[
-    "md", "txt", "rst", "adoc", "log",
+    "md", "mdx", "txt", "rst", "adoc", "log",
     "min.js", "map",
     "snap", "test.js.snap",
+    "jsonl",
 ];
 
 const SKIP_PATH_SEGMENTS: &[&str] = &[
