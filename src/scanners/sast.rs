@@ -55,6 +55,7 @@ fn should_skip_line(line: &str) -> bool {
         || trimmed.contains("it(\"")
         || trimmed.contains("it('")
         || trimmed.contains("describe(")
+        || trimmed.contains("PRAGMA")
         || trimmed.contains("test(\"")
         || trimmed.contains("test('")
         || trimmed.is_empty()

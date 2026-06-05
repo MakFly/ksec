@@ -18,25 +18,25 @@ pub fn sast_rules() -> Vec<SastRule> {
     use Severity::*;
 
     let defs: Vec<(&str, &str, Severity, &str, &[&str])> = vec![
-        // SQL Injection
-        ("sql-injection-concat", "SQL injection - string concatenation in query", High,
-            r#"(?i)(?:execute|query|prepare|raw)\s*\(\s*[`'"]\s*(?:SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE)\b[^`'"]*\$\{"#,
+        // SQL Injection — only flag when user input markers are present
+        ("sql-injection-concat", "SQL injection - user input in query", High,
+            r#"(?i)(?:execute|query|raw)\s*\(\s*[`'"]\s*(?:SELECT|INSERT|UPDATE|DELETE|DROP)\b[^`'"]*\$\{(?:req\b|params\b|query\b|body\b|input\b|args\b|user)"#,
             JS_TS),
-        ("sql-injection-fstring", "SQL injection - f-string in query", High,
-            r#"(?i)(?:execute|cursor\.execute|\.query)\s*\(\s*f['"]\s*(?:SELECT|INSERT|UPDATE|DELETE)\b"#,
+        ("sql-injection-fstring", "SQL injection - f-string with user input", High,
+            r#"(?i)(?:execute|cursor\.execute)\s*\(\s*f['"]\s*(?:SELECT|INSERT|UPDATE|DELETE)\b[^'"]*\{(?:request\b|params\b|args\b|kwargs\b|user_|input)"#,
             PY),
         ("sql-injection-format", "SQL injection - .format() in query", High,
             r#"(?i)(?:execute|cursor\.execute)\s*\(\s*['"].*(?:SELECT|INSERT|UPDATE|DELETE)\b.*['"]\.format\s*\("#,
             PY),
         ("sql-injection-concat-php", "SQL injection - concatenation in PHP query", High,
-            r#"(?i)\$(?:pdo|conn|db|mysqli)->(?:query|prepare|exec)\s*\(\s*['"].*\.\s*\$"#,
+            r#"(?i)\$(?:pdo|conn|db|mysqli)->(?:query|prepare|exec)\s*\(\s*['"].*\.\s*\$(?:_GET|_POST|_REQUEST|_COOKIE)"#,
             PHP),
 
         // XSS
         ("xss-innerhtml", "XSS - innerHTML assignment", High,
             r#"\.innerHTML\s*="#,
             JS_TS),
-        ("xss-dangerously-set", "XSS - dangerouslySetInnerHTML", High,
+        ("xss-dangerously-set", "XSS - dangerouslySetInnerHTML", Medium,
             r#"dangerouslySetInnerHTML"#,
             JS_TS),
         ("xss-document-write", "XSS - document.write()", Medium,
@@ -47,8 +47,8 @@ pub fn sast_rules() -> Vec<SastRule> {
             JS_TS),
 
         // Command Injection
-        ("cmd-injection-exec", "Command injection - exec/execSync with variable", Critical,
-            r#"(?:exec|execSync)\s*\(\s*(?:`[^`]*\$\{|['"][^'"]*\s*\+)"#,
+        ("cmd-injection-exec", "Command injection - exec/execSync with user input", Critical,
+            r#"(?:exec|execSync)\s*\(\s*(?:`[^`]*\$\{(?:req\b|params\b|query\b|body\b|input\b|user)|['"][^'"]*\s*\+\s*(?:req\b|params\b|query\b|body\b|input\b|user))"#,
             JS_TS),
         ("cmd-injection-spawn", "Command injection - spawn with user input", High,
             r#"(?:spawn|spawnSync)\s*\(\s*(?:req\.|params\.|query\.|body\.)"#,

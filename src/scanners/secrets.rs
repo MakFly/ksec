@@ -113,6 +113,35 @@ fn is_allowlisted(line: &str) -> bool {
         return true;
     }
 
+    // Form field labels / HTML attributes (not real passwords)
+    if line.contains("type=\"password\"")
+        || line.contains("type='password'")
+        || line.contains("type={\"password\"}")
+        || line.contains("name=\"password\"")
+        || line.contains("name='password'")
+        || line.contains("placeholder=")
+        || line.contains("autoComplete=")
+        || line.contains("autocomplete=")
+        || line.contains("label=")
+        || line.contains("Label>")
+        || line.contains("aria-label")
+        || line.contains("htmlFor=")
+    {
+        return true;
+    }
+
+    // Validation schemas (zod, yup, joi)
+    if line.contains(".min(")
+        || line.contains(".max(")
+        || line.contains(".regex(")
+        || line.contains("z.string()")
+        || line.contains("z.object(")
+        || line.contains("Yup.")
+        || line.contains("Joi.")
+    {
+        return true;
+    }
+
     ALLOWLIST_PATTERNS.iter().any(|p| line.contains(p))
 }
 
