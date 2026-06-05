@@ -102,14 +102,14 @@ fn parse_bun_lock_text(content: &str) -> Vec<Dependency> {
             .strip_prefix('"')
             .and_then(|s| s.split('"').next())
             .and_then(|pkg| pkg.rsplit_once('@'))
+            && !name.is_empty()
+            && !version.is_empty()
         {
-            if !name.is_empty() && !version.is_empty() {
-                deps.push(Dependency {
-                    name: name.to_string(),
-                    version: version.to_string(),
-                    ecosystem: "npm".into(),
-                });
-            }
+            deps.push(Dependency {
+                name: name.to_string(),
+                version: version.to_string(),
+                ecosystem: "npm".into(),
+            });
         }
     }
     deps
