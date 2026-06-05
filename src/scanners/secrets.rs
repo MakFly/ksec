@@ -25,22 +25,16 @@ const ALLOWLIST_PATTERNS: &[&str] = &[
     "{{",
     "process.env",
     "os.environ",
+    "os.getenv",
     "env(",
+    "ENV[",
+    "getenv(",
+    "env::",
+    "std::env",
+    "env.Get",
+    "config.",
+    "Config.",
 ];
-
-fn is_allowlisted(line: &str) -> bool {
-    if line.trim_start().starts_with("//")
-        || line.trim_start().starts_with('#')
-        || line.trim_start().starts_with("/*")
-        || line.trim_start().starts_with('*')
-    {
-        return true;
-    }
-    if line.contains("r#\"") || line.contains("r\"") || line.contains("Regex::new") {
-        return true;
-    }
-    ALLOWLIST_PATTERNS.iter().any(|p| line.contains(p))
-}
 
 const SKIP_FILES: &[&str] = &[
     "package-lock.json",
@@ -51,7 +45,75 @@ const SKIP_FILES: &[&str] = &[
     "composer.lock",
     "poetry.lock",
     "go.sum",
+    "go.mod",
+    ".gitignore",
+    ".dockerignore",
+    "LICENSE",
+    "CHANGELOG.md",
 ];
+
+const SKIP_EXTENSIONS: &[&str] = &[
+    "md", "txt", "rst", "adoc", "log",
+    "min.js", "map",
+    "snap", "test.js.snap",
+];
+
+const SKIP_PATH_SEGMENTS: &[&str] = &[
+    "test", "tests", "spec", "specs",
+    "__tests__", "__mocks__", "__fixtures__",
+    "fixtures", "testdata", "test-data",
+    "examples", "example", "demo", "demos",
+    "docs", "documentation",
+    "migrations",
+];
+
+fn is_test_or_fixture(path: &str) -> bool {
+    let lower = path.to_lowercase();
+    SKIP_PATH_SEGMENTS
+        .iter()
+        .any(|seg| lower.contains(&format!("/{seg}/")) || lower.starts_with(&format!("{seg}/")))
+        || lower.ends_with(".test.ts")
+        || lower.ends_with(".test.js")
+        || lower.ends_with(".spec.ts")
+        || lower.ends_with(".spec.js")
+        || lower.ends_with("_test.go")
+        || lower.ends_with("_test.py")
+}
+
+fn is_allowlisted(line: &str) -> bool {
+    let trimmed = line.trim_start();
+
+    if trimmed.starts_with("//")
+        || trimmed.starts_with('#')
+        || trimmed.starts_with("/*")
+        || trimmed.starts_with('*')
+        || trimmed.starts_with("<!--")
+    {
+        return true;
+    }
+
+    if line.contains("r#\"")
+        || line.contains("r\"")
+        || line.contains("Regex::new")
+        || line.contains("regex!")
+        || line.contains("re.compile")
+        || line.contains("Pattern.compile")
+        || line.contains("preg_match")
+    {
+        return true;
+    }
+
+    if line.contains("assert")
+        || line.contains("expect(")
+        || line.contains("test(")
+        || line.contains("it(")
+        || line.contains("describe(")
+    {
+        return true;
+    }
+
+    ALLOWLIST_PATTERNS.iter().any(|p| line.contains(p))
+}
 
 impl Scanner for SecretsScanner {
     fn name(&self) -> &str {
@@ -75,16 +137,26 @@ impl Scanner for SecretsScanner {
                 continue;
             }
 
-            let content = match fs::read_to_string(file_path) {
-                Ok(c) => c,
-                Err(_) => continue,
-            };
+            if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
+                if SKIP_EXTENSIONS.contains(&ext) {
+                    continue;
+                }
+            }
 
             let relative = file_path
                 .strip_prefix(target)
                 .unwrap_or(file_path)
                 .to_string_lossy()
                 .to_string();
+
+            if is_test_or_fixture(&relative) {
+                continue;
+            }
+
+            let content = match fs::read_to_string(file_path) {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
 
             for (line_num, line) in content.lines().enumerate() {
                 if line.len() > 2000 {

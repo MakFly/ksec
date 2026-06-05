@@ -20,7 +20,6 @@ const CONFIG_PATTERNS: &[&str] = &[
     "nuxt.config.*",
     "tailwind.config.*",
     "postcss.config.*",
-    "tsconfig.json",
     "jest.config.*",
 ];
 
@@ -77,11 +76,22 @@ impl Scanner for ObfuscationScanner {
                 let line_no = (line_num + 1) as u32;
 
                 if line.len() > 500 {
+                    let trimmed = line.trim();
+                    let looks_like_data = trimmed.starts_with('{')
+                        || trimmed.starts_with('[')
+                        || trimmed.starts_with("//")
+                        || trimmed.contains("sourceMap")
+                        || trimmed.contains("webpack");
+                    let severity = if looks_like_data || line.len() < 1000 {
+                        Severity::Medium
+                    } else {
+                        Severity::High
+                    };
                     findings.push(Finding {
-                        severity: Severity::High,
+                        severity,
                         category: Category::Obfuscation,
                         scanner: "obfuscation".into(),
-                        title: format!("line >500 chars ({} chars) — possible obfuscated payload", line.len()),
+                        title: format!("line >500 chars ({} chars) in config file", line.len()),
                         file: Some(relative.clone()),
                         line: Some(line_no),
                         detail: None,

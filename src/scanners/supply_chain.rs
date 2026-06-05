@@ -108,12 +108,34 @@ impl Scanner for SupplyChainScanner {
                 .to_string_lossy()
                 .to_string();
 
-            if relative.starts_with("node_modules/") {
+            if relative.starts_with("node_modules/")
+                || relative.contains("/test/")
+                || relative.contains("/tests/")
+                || relative.contains("/__tests__/")
+                || relative.contains("/fixtures/")
+                || relative.contains("/examples/")
+                || relative.ends_with(".test.js")
+                || relative.ends_with(".test.ts")
+                || relative.ends_with(".spec.js")
+                || relative.ends_with(".spec.ts")
+                || relative.ends_with(".min.js")
+                || relative.ends_with(".d.ts")
+            {
                 continue;
             }
 
             for (line_num, line) in content.lines().enumerate() {
                 if line.len() > 5000 {
+                    continue;
+                }
+                let trimmed = line.trim();
+                if trimmed.starts_with("//")
+                    || trimmed.starts_with("/*")
+                    || trimmed.starts_with('*')
+                    || trimmed.contains("assert")
+                    || trimmed.contains("expect(")
+                    || trimmed.contains("describe(")
+                {
                     continue;
                 }
                 for pat in &patterns {

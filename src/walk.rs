@@ -15,6 +15,18 @@ const SKIP_DIRS: &[&str] = &[
     ".tox",
     "coverage",
     ".nyc_output",
+    ".cursor-server",
+    ".vscode-server",
+    ".vscode",
+    ".cursor",
+    ".idea",
+    ".cache",
+    ".local",
+    ".npm",
+    ".bun",
+    ".cargo",
+    ".rustup",
+    "snap",
 ];
 
 const BINARY_EXTENSIONS: &[&str] = &[

@@ -6,6 +6,52 @@ use std::path::Path;
 
 pub struct SastScanner;
 
+const SKIP_PATH_SEGMENTS: &[&str] = &[
+    "test", "tests", "spec", "specs",
+    "__tests__", "__mocks__", "__fixtures__",
+    "fixtures", "testdata", "test-data",
+    "examples", "example", "demo",
+    "docs", "migrations",
+];
+
+fn should_skip_path(path: &str) -> bool {
+    let lower = path.to_lowercase();
+    SKIP_PATH_SEGMENTS
+        .iter()
+        .any(|seg| lower.contains(&format!("/{seg}/")) || lower.starts_with(&format!("{seg}/")))
+        || lower.ends_with(".test.ts")
+        || lower.ends_with(".test.js")
+        || lower.ends_with(".spec.ts")
+        || lower.ends_with(".spec.js")
+        || lower.ends_with("_test.go")
+        || lower.ends_with("_test.py")
+        || lower.contains(".min.")
+        || lower.ends_with(".d.ts")
+        || lower.ends_with(".map")
+}
+
+fn should_skip_line(line: &str) -> bool {
+    let trimmed = line.trim();
+    trimmed.starts_with("//")
+        || trimmed.starts_with('#')
+        || trimmed.starts_with("/*")
+        || trimmed.starts_with('*')
+        || trimmed.starts_with("<!--")
+        || trimmed.contains("r#\"")
+        || trimmed.contains("Regex::new")
+        || trimmed.contains("re.compile")
+        || trimmed.contains("preg_match")
+        || trimmed.contains("Pattern.compile")
+        || trimmed.contains("assert")
+        || trimmed.contains("expect(")
+        || trimmed.contains("it(\"")
+        || trimmed.contains("it('")
+        || trimmed.contains("describe(")
+        || trimmed.contains("test(\"")
+        || trimmed.contains("test('")
+        || trimmed.is_empty()
+}
+
 impl Scanner for SastScanner {
     fn name(&self) -> &str {
         "sast"
@@ -33,26 +79,23 @@ impl Scanner for SastScanner {
                 continue;
             }
 
-            let content = match fs::read_to_string(file_path) {
-                Ok(c) => c,
-                Err(_) => continue,
-            };
-
             let relative = file_path
                 .strip_prefix(target)
                 .unwrap_or(file_path)
                 .to_string_lossy()
                 .to_string();
 
+            if should_skip_path(&relative) {
+                continue;
+            }
+
+            let content = match fs::read_to_string(file_path) {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+
             for (line_num, line) in content.lines().enumerate() {
-                let trimmed = line.trim();
-                if trimmed.starts_with("//")
-                    || trimmed.starts_with('#')
-                    || trimmed.starts_with("/*")
-                    || trimmed.starts_with('*')
-                    || trimmed.contains("r#\"")
-                    || trimmed.contains("Regex::new")
-                {
+                if should_skip_line(line) {
                     continue;
                 }
 
