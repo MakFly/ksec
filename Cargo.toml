@@ -3,6 +3,12 @@ name = "ksec"
 version = "0.2.0"
 edition = "2024"
 description = "Self-contained security scanner CLI — secrets, deps, supply chain, SAST, obfuscation"
+license = "MIT"
+repository = "https://github.com/MakFly/ksec"
+homepage = "https://github.com/MakFly/ksec"
+keywords = ["security", "scanner", "secrets", "sast", "supply-chain"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
