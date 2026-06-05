@@ -8,7 +8,7 @@ mod scanner;
 mod scanners;
 mod walk;
 
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use cli::{Cli, Commands};
 use std::path::PathBuf;
 
@@ -43,7 +43,8 @@ async fn main() {
             run_scan(scanners::obfuscation_scanners(), &resolve_path(path), &cli).await;
         }
         None => {
-            run_scan(scanners::all_scanners(), &resolve_path(&cli.path), &cli).await;
+            Cli::command().print_help().ok();
+            println!();
         }
     }
 }
