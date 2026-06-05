@@ -98,15 +98,17 @@ fn parse_bun_lock_text(content: &str) -> Vec<Dependency> {
             continue;
         }
         // "package@version": [...]
-        if let Some(pkg_spec) = trimmed.strip_prefix('"').and_then(|s| s.split('"').next()) {
-            if let Some((name, version)) = pkg_spec.rsplit_once('@') {
-                if !name.is_empty() && !version.is_empty() {
-                    deps.push(Dependency {
-                        name: name.to_string(),
-                        version: version.to_string(),
-                        ecosystem: "npm".into(),
-                    });
-                }
+        if let Some((name, version)) = trimmed
+            .strip_prefix('"')
+            .and_then(|s| s.split('"').next())
+            .and_then(|pkg| pkg.rsplit_once('@'))
+        {
+            if !name.is_empty() && !version.is_empty() {
+                deps.push(Dependency {
+                    name: name.to_string(),
+                    version: version.to_string(),
+                    ecosystem: "npm".into(),
+                });
             }
         }
     }

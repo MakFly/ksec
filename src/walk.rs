@@ -111,10 +111,10 @@ pub fn walk_files(target: &Path) -> Vec<PathBuf> {
         .git_global(false)
         .git_exclude(true)
         .filter_entry(|entry| {
-            if let Some(name) = entry.file_name().to_str() {
-                if entry.file_type().is_some_and(|ft| ft.is_dir()) {
-                    return !SKIP_DIRS.contains(&name);
-                }
+            if let Some(name) = entry.file_name().to_str()
+                && entry.file_type().is_some_and(|ft| ft.is_dir())
+            {
+                return !SKIP_DIRS.contains(&name);
             }
             true
         });
@@ -130,10 +130,8 @@ pub fn walk_files(target: &Path) -> Vec<PathBuf> {
             continue;
         }
         let path = entry.path();
-        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-            if BINARY_EXTENSIONS.contains(&ext.to_lowercase().as_str()) {
-                continue;
-            }
+        if path.extension().and_then(|e| e.to_str()).is_some_and(|ext| BINARY_EXTENSIONS.contains(&ext.to_lowercase().as_str())) {
+            continue;
         }
         files.push(path.to_path_buf());
     }

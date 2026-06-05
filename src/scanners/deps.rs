@@ -46,27 +46,23 @@ struct OsvSeverity {
 }
 
 fn score_to_severity(vuln: &OsvVuln) -> Severity {
-    if let Some(sevs) = &vuln.severity {
-        if let Some(s) = sevs.first().and_then(|s| s.score) {
-            return match s {
-                s if s >= 9.0 => Severity::Critical,
-                s if s >= 7.0 => Severity::High,
-                s if s >= 4.0 => Severity::Medium,
-                _ => Severity::Low,
-            };
-        }
+    if let Some(s) = vuln.severity.as_ref().and_then(|sevs| sevs.first()).and_then(|s| s.score) {
+        return match s {
+            s if s >= 9.0 => Severity::Critical,
+            s if s >= 7.0 => Severity::High,
+            s if s >= 4.0 => Severity::Medium,
+            _ => Severity::Low,
+        };
     }
 
-    if let Some(db) = &vuln.database_specific {
-        if let Some(sev_str) = db.get("severity").and_then(|s| s.as_str()) {
-            return match sev_str.to_uppercase().as_str() {
-                "CRITICAL" => Severity::Critical,
-                "HIGH" => Severity::High,
-                "MODERATE" | "MEDIUM" => Severity::Medium,
-                "LOW" => Severity::Low,
-                _ => Severity::Medium,
-            };
-        }
+    if let Some(sev_str) = vuln.database_specific.as_ref().and_then(|db| db.get("severity")).and_then(|s| s.as_str()) {
+        return match sev_str.to_uppercase().as_str() {
+            "CRITICAL" => Severity::Critical,
+            "HIGH" => Severity::High,
+            "MODERATE" | "MEDIUM" => Severity::Medium,
+            "LOW" => Severity::Low,
+            _ => Severity::Medium,
+        };
     }
 
     Severity::Medium

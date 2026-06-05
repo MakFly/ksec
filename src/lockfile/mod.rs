@@ -16,7 +16,8 @@ use std::path::Path;
 pub fn detect_and_parse(target: &Path) -> Vec<Dependency> {
     let mut deps = Vec::new();
 
-    let candidates: Vec<(&str, fn(&str) -> Vec<Dependency>)> = vec![
+    type Parser = fn(&str) -> Vec<Dependency>;
+    let candidates: Vec<(&str, Parser)> = vec![
         ("package-lock.json", npm::parse_package_lock),
         ("bun.lock", npm::parse_bun_lock),
         ("yarn.lock", npm::parse_yarn_lock),
@@ -29,10 +30,8 @@ pub fn detect_and_parse(target: &Path) -> Vec<Dependency> {
 
     for (filename, parser) in candidates {
         let path = target.join(filename);
-        if path.exists() {
-            if let Ok(content) = std::fs::read_to_string(&path) {
-                deps.extend(parser(&content));
-            }
+        if path.exists() && let Ok(content) = std::fs::read_to_string(&path) {
+            deps.extend(parser(&content));
         }
     }
 

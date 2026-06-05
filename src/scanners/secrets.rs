@@ -167,10 +167,8 @@ impl Scanner for SecretsScanner {
                 continue;
             }
 
-            if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
-                if SKIP_EXTENSIONS.contains(&ext) {
-                    continue;
-                }
+            if file_path.extension().and_then(|e| e.to_str()).is_some_and(|ext| SKIP_EXTENSIONS.contains(&ext)) {
+                continue;
             }
 
             let relative = file_path
