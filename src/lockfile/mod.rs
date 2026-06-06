@@ -30,7 +30,9 @@ pub fn detect_and_parse(target: &Path) -> Vec<Dependency> {
 
     for (filename, parser) in candidates {
         let path = target.join(filename);
-        if path.exists() && let Ok(content) = std::fs::read_to_string(&path) {
+        if path.exists()
+            && let Ok(content) = std::fs::read_to_string(&path)
+        {
             deps.extend(parser(&content));
         }
     }

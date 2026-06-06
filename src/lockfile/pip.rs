@@ -55,7 +55,11 @@ pub fn parse_poetry_lock(content: &str) -> Vec<Dependency> {
     }
 
     if !name.is_empty() && !version.is_empty() {
-        deps.push(Dependency { name, version, ecosystem: "PyPI".into() });
+        deps.push(Dependency {
+            name,
+            version,
+            ecosystem: "PyPI".into(),
+        });
     }
 
     deps

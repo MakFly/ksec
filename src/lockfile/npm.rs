@@ -68,10 +68,7 @@ pub fn parse_bun_lock(content: &str) -> Vec<Dependency> {
 
     if let Some(packages) = parsed.get("packages").and_then(|p| p.as_object()) {
         for (key, val) in packages {
-            let name = key
-                .strip_prefix("node_modules/")
-                .unwrap_or(key)
-                .to_string();
+            let name = key.strip_prefix("node_modules/").unwrap_or(key).to_string();
             let version = val
                 .as_array()
                 .and_then(|arr| arr.first())

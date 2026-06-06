@@ -7,17 +7,24 @@ use std::path::Path;
 pub struct SastScanner;
 
 const SKIP_PATH_SEGMENTS: &[&str] = &[
-    "test", "tests", "spec", "specs",
-    "__tests__", "__mocks__", "__fixtures__",
-    "fixtures", "testdata", "test-data",
-    "examples", "example", "demo",
-    "docs", "migrations",
+    "test",
+    "tests",
+    "spec",
+    "specs",
+    "__tests__",
+    "__mocks__",
+    "__fixtures__",
+    "fixtures",
+    "testdata",
+    "test-data",
+    "examples",
+    "example",
+    "demo",
+    "docs",
+    "migrations",
 ];
 
-const SKIP_FILES: &[&str] = &[
-    "chart.tsx",
-    "json-ld.tsx",
-];
+const SKIP_FILES: &[&str] = &["chart.tsx", "json-ld.tsx"];
 
 fn should_skip_path(path: &str) -> bool {
     let lower = path.to_lowercase();
@@ -74,10 +81,7 @@ impl Scanner for SastScanner {
         let mut findings = Vec::new();
 
         for file_path in &files {
-            let ext = file_path
-                .extension()
-                .and_then(|e| e.to_str())
-                .unwrap_or("");
+            let ext = file_path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
             let applicable_rules: Vec<_> = rules
                 .iter()

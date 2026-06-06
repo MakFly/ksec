@@ -45,13 +45,19 @@ pub fn run_init(force: bool) {
         Ok(()) => {
             println!("  {} lefthook.yml generated", "✓".green());
             println!();
-            println!("  pre-commit: {} + {} + {}",
-                "secrets".bold(), "sast".bold(), "obfuscation".bold());
-            println!("  pre-push:   {}",
-                "full scan (all 5 scanners)".bold());
+            println!(
+                "  pre-commit: {} + {} + {}",
+                "secrets".bold(),
+                "sast".bold(),
+                "obfuscation".bold()
+            );
+            println!("  pre-push:   {}", "full scan (all 5 scanners)".bold());
             println!();
             println!("  next steps:");
-            println!("    1. Install lefthook: {}", "go install github.com/evilmartians/lefthook@latest".dimmed());
+            println!(
+                "    1. Install lefthook: {}",
+                "go install github.com/evilmartians/lefthook@latest".dimmed()
+            );
             println!("    2. Activate hooks:   {}", "lefthook install".dimmed());
         }
         Err(e) => {

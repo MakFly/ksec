@@ -2,7 +2,11 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "ksec", version, about = "Self-contained security scanner — secrets, deps, supply chain, SAST, obfuscation")]
+#[command(
+    name = "ksec",
+    version,
+    about = "Self-contained security scanner — secrets, deps, supply chain, SAST, obfuscation"
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,

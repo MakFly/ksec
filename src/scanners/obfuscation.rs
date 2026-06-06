@@ -52,10 +52,7 @@ impl Scanner for ObfuscationScanner {
         let mut findings = Vec::new();
 
         for file_path in &files {
-            let filename = file_path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("");
+            let filename = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
             if !is_config_file(filename) {
                 continue;

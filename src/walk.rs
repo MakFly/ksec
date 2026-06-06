@@ -10,7 +10,6 @@ const SKIP_DIRS: &[&str] = &[
     ".venv",
     "venv",
     ".tox",
-
     // build outputs
     "dist",
     "build",
@@ -21,17 +20,14 @@ const SKIP_DIRS: &[&str] = &[
     "__pycache__",
     "coverage",
     ".nyc_output",
-
     // VCS
     ".git",
-
     // IDE / editor runtimes
     ".cursor-server",
     ".vscode-server",
     ".vscode",
     ".cursor",
     ".idea",
-
     // tool caches (pure noise, no user code)
     ".cache",
     ".local",
@@ -47,34 +43,26 @@ const SKIP_DIRS: &[&str] = &[
     ".gradle",
     ".m2",
     ".docker",
-
     // Go module cache (library code, not user code)
     "pkg",
-
     // browser internals
     "google-chrome",
     "chromium",
     "firefox",
     "BraveSoftware",
-
     // Claude Code internals (history, plugins, sessions)
     "file-history",
     "plugins",
     "worktrees",
-
     // auto-generated docs
     ".next-docs",
 ];
 
 const BINARY_EXTENSIONS: &[&str] = &[
-    "png", "jpg", "jpeg", "gif", "webp", "ico", "svg", "bmp", "tiff",
-    "mp3", "mp4", "avi", "mov", "mkv", "flac", "wav", "ogg",
-    "zip", "tar", "gz", "bz2", "xz", "7z", "rar",
-    "woff", "woff2", "ttf", "eot", "otf",
-    "pdf", "doc", "docx", "xls", "xlsx",
-    "exe", "dll", "so", "dylib", "o", "a",
-    "wasm", "pyc", "pyo", "class",
-    "sqlite", "db",
+    "png", "jpg", "jpeg", "gif", "webp", "ico", "svg", "bmp", "tiff", "mp3", "mp4", "avi", "mov",
+    "mkv", "flac", "wav", "ogg", "zip", "tar", "gz", "bz2", "xz", "7z", "rar", "woff", "woff2",
+    "ttf", "eot", "otf", "pdf", "doc", "docx", "xls", "xlsx", "exe", "dll", "so", "dylib", "o",
+    "a", "wasm", "pyc", "pyo", "class", "sqlite", "db",
 ];
 
 fn load_ksecignore(target: &Path) -> Option<ignore::overrides::Override> {
@@ -130,7 +118,11 @@ pub fn walk_files(target: &Path) -> Vec<PathBuf> {
             continue;
         }
         let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()).is_some_and(|ext| BINARY_EXTENSIONS.contains(&ext.to_lowercase().as_str())) {
+        if path
+            .extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|ext| BINARY_EXTENSIONS.contains(&ext.to_lowercase().as_str()))
+        {
             continue;
         }
         files.push(path.to_path_buf());

@@ -53,18 +53,36 @@ const SKIP_FILES: &[&str] = &[
 ];
 
 const SKIP_EXTENSIONS: &[&str] = &[
-    "md", "mdx", "txt", "rst", "adoc", "log",
-    "min.js", "map",
-    "snap", "test.js.snap",
+    "md",
+    "mdx",
+    "txt",
+    "rst",
+    "adoc",
+    "log",
+    "min.js",
+    "map",
+    "snap",
+    "test.js.snap",
     "jsonl",
 ];
 
 const SKIP_PATH_SEGMENTS: &[&str] = &[
-    "test", "tests", "spec", "specs",
-    "__tests__", "__mocks__", "__fixtures__",
-    "fixtures", "testdata", "test-data",
-    "examples", "example", "demo", "demos",
-    "docs", "documentation",
+    "test",
+    "tests",
+    "spec",
+    "specs",
+    "__tests__",
+    "__mocks__",
+    "__fixtures__",
+    "fixtures",
+    "testdata",
+    "test-data",
+    "examples",
+    "example",
+    "demo",
+    "demos",
+    "docs",
+    "documentation",
     "migrations",
 ];
 
@@ -158,16 +176,17 @@ impl Scanner for SecretsScanner {
         let mut findings = Vec::new();
 
         for file_path in &files {
-            let file_name = file_path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("");
+            let file_name = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
             if SKIP_FILES.contains(&file_name) {
                 continue;
             }
 
-            if file_path.extension().and_then(|e| e.to_str()).is_some_and(|ext| SKIP_EXTENSIONS.contains(&ext)) {
+            if file_path
+                .extension()
+                .and_then(|e| e.to_str())
+                .is_some_and(|ext| SKIP_EXTENSIONS.contains(&ext))
+            {
                 continue;
             }
 

@@ -84,10 +84,7 @@ pub fn print_report(results: &[ScanResult], min_severity: &str) {
 
     println!();
     println!("{}", "─── summary ───".dimmed());
-    println!(
-        "  scanners: {} run",
-        results.len().to_string().bold(),
-    );
+    println!("  scanners: {} run", results.len().to_string().bold(),);
     println!(
         "  findings: {} total, {} high/critical",
         total_findings.to_string().bold(),
@@ -106,10 +103,8 @@ pub fn print_json(results: &[ScanResult]) {
 }
 
 pub fn exit_code(results: &[ScanResult]) -> i32 {
-    let has_high = results.iter().any(|r| {
-        r.findings
-            .iter()
-            .any(|f| f.severity >= Severity::High)
-    });
+    let has_high = results
+        .iter()
+        .any(|r| r.findings.iter().any(|f| f.severity >= Severity::High));
     if has_high { 1 } else { 0 }
 }

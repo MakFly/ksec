@@ -52,7 +52,10 @@ fn scan_package_jsons(target: &Path, findings: &mut Vec<Finding>) {
                                 severity: Severity::High,
                                 category: Category::SupplyChain,
                                 scanner: "supply-chain".into(),
-                                title: format!("{} in {} script ({})", pat.description, key, pat.id),
+                                title: format!(
+                                    "{} in {} script ({})",
+                                    pat.description, key, pat.id
+                                ),
                                 file: Some(relative.clone()),
                                 line: None,
                                 detail: Some(format!("{key}: {script_val}")),

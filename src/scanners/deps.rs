@@ -46,7 +46,12 @@ struct OsvSeverity {
 }
 
 fn score_to_severity(vuln: &OsvVuln) -> Severity {
-    if let Some(s) = vuln.severity.as_ref().and_then(|sevs| sevs.first()).and_then(|s| s.score) {
+    if let Some(s) = vuln
+        .severity
+        .as_ref()
+        .and_then(|sevs| sevs.first())
+        .and_then(|s| s.score)
+    {
         return match s {
             s if s >= 9.0 => Severity::Critical,
             s if s >= 7.0 => Severity::High,
@@ -55,7 +60,12 @@ fn score_to_severity(vuln: &OsvVuln) -> Severity {
         };
     }
 
-    if let Some(sev_str) = vuln.database_specific.as_ref().and_then(|db| db.get("severity")).and_then(|s| s.as_str()) {
+    if let Some(sev_str) = vuln
+        .database_specific
+        .as_ref()
+        .and_then(|db| db.get("severity"))
+        .and_then(|s| s.as_str())
+    {
         return match sev_str.to_uppercase().as_str() {
             "CRITICAL" => Severity::Critical,
             "HIGH" => Severity::High,
@@ -152,10 +162,7 @@ impl Scanner for DepsScanner {
                                 severity,
                                 category: Category::Deps,
                                 scanner: "deps".into(),
-                                title: format!(
-                                    "{} — {}@{}",
-                                    vid, dep.name, dep.version
-                                ),
+                                title: format!("{} — {}@{}", vid, dep.name, dep.version),
                                 file: None,
                                 line: None,
                                 detail: vuln.summary.clone(),
