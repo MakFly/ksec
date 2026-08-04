@@ -8,6 +8,46 @@ pub struct SupplyChainScanner;
 
 const JS_EXTENSIONS: &[&str] = &["js", "cjs", "mjs", "ts", "tsx", "jsx"];
 
+fn scan_known_malware_files(target: &Path, findings: &mut Vec<Finding>) {
+    const PAYLOAD_FILES: &[&str] = &["Math_Symbol.js", "math_init.js"];
+    const DROPPER_FILES: &[&str] = &["setup.mjs"];
+    let files = walk::walk_files(target);
+
+    for file_path in &files {
+        let name = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        if PAYLOAD_FILES.contains(&name) || DROPPER_FILES.contains(&name) {
+            let relative = file_path
+                .strip_prefix(target)
+                .unwrap_or(file_path)
+                .to_string_lossy()
+                .to_string();
+
+            let mut flagged = PAYLOAD_FILES.contains(&name);
+            if DROPPER_FILES.contains(&name)
+                && let Ok(content) = fs::read_to_string(file_path)
+            {
+                flagged = content.contains("execFileSync")
+                    || content.contains("oven-sh/bun")
+                    || content.contains("releases/download");
+            }
+
+            if flagged {
+                findings.push(Finding {
+                    severity: Severity::Critical,
+                    category: Category::SupplyChain,
+                    scanner: "supply-chain".into(),
+                    title: format!("known Shai-Hulud dropper/payload file: {name}"),
+                    file: Some(relative),
+                    line: None,
+                    detail: Some(
+                        "Indicator matches the keyv & friends supply-chain worm (Aug 2026)".into(),
+                    ),
+                });
+            }
+        }
+    }
+}
+
 fn scan_package_jsons(target: &Path, findings: &mut Vec<Finding>) {
     let patterns = supply_chain_patterns();
     let install_patterns: Vec<_> = patterns
@@ -96,6 +136,7 @@ impl Scanner for SupplyChainScanner {
         let patterns = supply_chain_patterns();
 
         scan_package_jsons(target, &mut findings);
+        scan_known_malware_files(target, &mut findings);
 
         let files = walk::walk_files_with_extensions(target, JS_EXTENSIONS);
 

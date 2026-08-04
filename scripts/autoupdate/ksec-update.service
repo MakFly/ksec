@@ -1,0 +1,35 @@
+[Unit]
+# Mise à jour de ksec sur le POSTE. La source reste le dépôt local : le
+# binaire, lui, est vérifié par sa somme SHA-256 face au .sha256 de la release.
+Description=Met à jour ksec si une nouvelle release est publiée
+Documentation=https://github.com/MakFly/ksec
+# Sans réseau, il n'y a rien à demander à GitHub — on sort en silence plutôt
+# que d'écrire un échec quotidien dans le journal.
+After=network-online.target
+
+[Service]
+Type=oneshot
+
+# On exécute la COPIE LOCALE de install.sh, pas un `curl | sh`. La différence
+# n'est pas cosmétique : un `curl | sh` quotidien donne à quiconque prend la
+# main sur le dépôt une exécution de code par jour sur ce poste. Ici le script
+# est versionné, relu, et sa mise à jour reste un `git pull` volontaire ; le
+# binaire, lui, est vérifié par sa somme SHA-256. C'est la chaîne de confiance
+# qu'on veut : script relu, octets prouvés.
+#
+# KSEC_ONLY_IF_NEWER=1 : sans lui, ce timer retéléchargerait le binaire chaque
+# jour pour réécrire le même fichier.
+#
+# @INSTALL_SH@ est remplacé par le chemin réel du dépôt à l'installation
+# (scripts/autoupdate/install-timer.sh) : ce fichier est un gabarit, pas
+# l'unité posée dans ~/.config/systemd/user.
+Environment=KSEC_ONLY_IF_NEWER=1
+ExecStart=/bin/sh @INSTALL_SH@
+
+# Un poste sans réseau, un GitHub en panne, une release en cours de publication :
+# aucun de ces cas ne mérite un service « failed » qui reste rouge jusqu'au
+# prochain regard. Le timer repassera demain.
+SuccessExitStatus=0 1
+
+[Install]
+WantedBy=default.target

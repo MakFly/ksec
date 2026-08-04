@@ -120,5 +120,51 @@ pub fn supply_chain_patterns() -> Vec<SupplyChainPattern> {
             "Download binary in install script",
             r#"(?:preinstall|postinstall)\s*"?\s*:\s*"[^"]*(?:curl|wget|https?://)[^"]*""#
         ),
+        // ── Shai-Hulud / keyv npm supply-chain worm IOCs (2026-08) ──
+        pattern!(
+            "preinstall-dropper",
+            "preinstall script launching setup.mjs dropper",
+            r#"node\s+(?:\./)?setup\.mjs"#
+        ),
+        pattern!(
+            "shai-hulud-banner",
+            "Shai-Hulud worm marker string",
+            r"Shai-Hulud|Here\s+We\s+Go\s+Again"
+        ),
+        pattern!(
+            "shai-hulud-exfil-host",
+            "Shai-Hulud exfiltration endpoint (npm-cache[.]com)",
+            r"npm-cache(?:\[\.\]|\.)com"
+        ),
+        pattern!(
+            "shai-hulud-c2-contract",
+            "Shai-Hulud C2 Ethereum contract address",
+            r"(?i)0xe1f2395ee43e45a1556ec6438a88c31b83493103"
+        ),
+        pattern!(
+            "shai-hulud-bun-dropper",
+            "Bun runtime download used by dropper (bun-v1.3.13)",
+            r"oven-sh/bun/releases/download/bun-v1\.3\.13"
+        ),
+        pattern!(
+            "shai-hulud-worm-file",
+            "Shai-Hulud payload file reference (Math_Symbol.js / math_init.js)",
+            r"(?:Math_Symbol|math_init)\.js"
+        ),
+        pattern!(
+            "npm-token-enum",
+            "npm token enumeration — worm propagation vector",
+            r"/-/npm/v1/tokens"
+        ),
+        pattern!(
+            "npm-whoami-validate",
+            "npm token validation against /-/whoami",
+            r"/-/whoami"
+        ),
+        pattern!(
+            "cloud-metadata-exfil",
+            "Cloud metadata endpoint access (169.254.x.x)",
+            r"169\.254\.(?:169\.254|170\.2)"
+        ),
     ]
 }
