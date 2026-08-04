@@ -8,28 +8,53 @@ pub struct SupplyChainScanner;
 
 const JS_EXTENSIONS: &[&str] = &["js", "cjs", "mjs", "ts", "tsx", "jsx"];
 
+/// Un fichier ne devient une alerte que si son contenu le trahit.
+///
+/// Le nom seul ne prouve rien : `Math_Symbol.js` est aussi une table Unicode
+/// parfaitement légitime de `regenerate-unicode-properties`, et `setup.mjs` est
+/// un module de `motion-dom`. Les deux sont présents dans n'importe quel projet
+/// front un peu fourni, donc alerter sur le nom produit un CRITICAL faux à
+/// chaque scan.
+fn looks_malicious(content: &str) -> bool {
+    content.contains("execFileSync")
+        || content.contains("child_process")
+        || content.contains("oven-sh/bun")
+        || content.contains("releases/download")
+        || content.contains("webhook.site")
+        || has_encoded_blob(content)
+}
+
+/// Une longue ligne quasi exclusivement alphanumérique : charge encodée en
+/// base64. Du JS minifié atteint la même longueur mais reste truffé de
+/// ponctuation, ce qui le fait passer sous le seuil.
+fn has_encoded_blob(content: &str) -> bool {
+    content.lines().any(|line| {
+        line.len() > 1000
+            && line
+                .chars()
+                .filter(|c| c.is_ascii_alphanumeric() || *c == '+' || *c == '/' || *c == '=')
+                .count()
+                * 10
+                >= line.len() * 9
+    })
+}
+
 fn scan_known_malware_files(target: &Path, findings: &mut Vec<Finding>) {
-    const PAYLOAD_FILES: &[&str] = &["Math_Symbol.js", "math_init.js"];
-    const DROPPER_FILES: &[&str] = &["setup.mjs"];
-    let files = walk::walk_files(target);
+    const IOC_FILES: &[&str] = &["Math_Symbol.js", "math_init.js", "setup.mjs"];
+    // Ce scan est le seul à descendre dans les dépendances installées : c'est
+    // là, et nulle part ailleurs, que la charge est déposée.
+    let files = walk::walk_files_including_deps(target);
 
     for file_path in &files {
         let name = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        if PAYLOAD_FILES.contains(&name) || DROPPER_FILES.contains(&name) {
+        if IOC_FILES.contains(&name) {
             let relative = file_path
                 .strip_prefix(target)
                 .unwrap_or(file_path)
                 .to_string_lossy()
                 .to_string();
 
-            let mut flagged = PAYLOAD_FILES.contains(&name);
-            if DROPPER_FILES.contains(&name)
-                && let Ok(content) = fs::read_to_string(file_path)
-            {
-                flagged = content.contains("execFileSync")
-                    || content.contains("oven-sh/bun")
-                    || content.contains("releases/download");
-            }
+            let flagged = fs::read_to_string(file_path).is_ok_and(|c| looks_malicious(&c));
 
             if flagged {
                 findings.push(Finding {
@@ -200,5 +225,53 @@ impl Scanner for SupplyChainScanner {
         }
 
         findings
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{has_encoded_blob, looks_malicious};
+
+    #[test]
+    fn legit_unicode_table_is_not_flagged() {
+        // regenerate-unicode-properties/General_Category/Math_Symbol.js : porte
+        // un nom d'indicateur connu, mais n'est qu'une table de points de code.
+        let content = "const set = require('regenerate')(0x2B, 0x7C, 0x7E, 0xAC, 0xB1, 0xD7);\n\
+                       module.exports = set;\n";
+        assert!(!looks_malicious(content));
+    }
+
+    #[test]
+    fn legit_motion_dom_setup_is_not_flagged() {
+        let content = "import { resolveElements } from '../../utils/resolve-elements.mjs';\n\
+                       function setupGesture(elementOrSelector, options) {\n\
+                       const gestureAbortController = new AbortController();\n\
+                       }\n\
+                       export { setupGesture };\n";
+        assert!(!looks_malicious(content));
+    }
+
+    #[test]
+    fn dropper_spawning_a_process_is_flagged() {
+        let content = "import { execFileSync } from 'child_process';\n\
+                       execFileSync('curl', ['-sL', 'https://github.com/oven-sh/bun/releases/download/x/bun']);\n";
+        assert!(looks_malicious(content));
+    }
+
+    #[test]
+    fn long_base64_payload_is_flagged() {
+        let content = format!("const d=\"{}\";", "QUJDRGVmZ2hpams".repeat(100));
+        assert!(has_encoded_blob(&content));
+    }
+
+    #[test]
+    fn minified_javascript_is_not_mistaken_for_a_payload() {
+        // Du JS minifié dépasse aussi les 1000 caractères sur une ligne : c'est
+        // sa ponctuation qui doit le faire passer sous le seuil, pas sa taille.
+        let content = "!function(e,t){for(var n=0;n<e.length;n++){t[n]=e[n].call(null,n),\
+                       e[n]=null}}(a,b),c.d={e:1,f:2},"
+            .repeat(30);
+        assert!(content.len() > 1000);
+        assert!(!has_encoded_blob(&content));
     }
 }

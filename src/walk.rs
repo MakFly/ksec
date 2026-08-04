@@ -89,22 +89,56 @@ fn load_ksecignore(target: &Path) -> Option<ignore::overrides::Override> {
 }
 
 pub fn walk_files(target: &Path) -> Vec<PathBuf> {
+    collect(target, false)
+}
+
+/// Même parcours que `walk_files`, mais qui entre dans les `node_modules`.
+///
+/// Réservé à la recherche d'indicateurs de compromission : un dropper de la
+/// chaîne d'approvisionnement n'atterrit jamais dans le code du projet, il
+/// atterrit dans une dépendance installée. Les autres scanners doivent garder
+/// `walk_files`, sinon `secrets` et `sast` remontent le bruit de dizaines de
+/// milliers de paquets.
+pub fn walk_files_including_deps(target: &Path) -> Vec<PathBuf> {
+    collect(target, true)
+}
+
+fn collect(target: &Path, include_deps: bool) -> Vec<PathBuf> {
     let overrides = load_ksecignore(target);
 
     let mut files = Vec::new();
     let mut builder = WalkBuilder::new(target);
     builder
         .hidden(false)
-        .git_ignore(true)
+        // `node_modules` est presque toujours dans le .gitignore. Pour aller y
+        // chercher un dropper il ne suffit donc pas de le retirer de SKIP_DIRS,
+        // il faut aussi désarmer le filtre git.
+        .git_ignore(!include_deps)
         .git_global(false)
-        .git_exclude(true)
-        .filter_entry(|entry| {
-            if let Some(name) = entry.file_name().to_str()
-                && entry.file_type().is_some_and(|ft| ft.is_dir())
-            {
-                return !SKIP_DIRS.contains(&name);
+        .git_exclude(!include_deps)
+        .filter_entry(move |entry| {
+            let Some(name) = entry.file_name().to_str() else {
+                return true;
+            };
+            if !entry.file_type().is_some_and(|ft| ft.is_dir()) {
+                return true;
             }
-            true
+            if include_deps {
+                if name == "node_modules" {
+                    return true;
+                }
+                // Une fois à l'intérieur d'un node_modules, plus aucun filtre de
+                // bruit : la charge se cache justement dans `dist/` et le magasin
+                // de bun est un `.bun/`, deux noms présents dans SKIP_DIRS.
+                if entry
+                    .path()
+                    .components()
+                    .any(|c| c.as_os_str() == "node_modules")
+                {
+                    return name != ".git";
+                }
+            }
+            !SKIP_DIRS.contains(&name)
         });
 
     if let Some(ref ov) = overrides {
