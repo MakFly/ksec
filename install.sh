@@ -1,7 +1,7 @@
 #!/bin/sh
 # Installe ksec depuis les releases GitHub.
 #
-#   curl -fsSL https://raw.githubusercontent.com/MakFly/ksec/master/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/dev-toolings/ksec/master/install.sh | sh
 #
 # Variables :
 #   KSEC_VERSION          version précise (défaut : la dernière release)
@@ -16,7 +16,7 @@
 # prouver que l'octet posé sur son disque est bien celui qui a été publié.
 set -eu
 
-REPO="MakFly/ksec"
+REPO="dev-toolings/ksec"
 BINARY="ksec"
 INSTALL_DIR="${KSEC_INSTALL_DIR:-$HOME/.local/bin}"
 

@@ -2,7 +2,7 @@
 # Mise à jour de ksec sur le POSTE. La source reste le dépôt local : le
 # binaire, lui, est vérifié par sa somme SHA-256 face au .sha256 de la release.
 Description=Met à jour ksec si une nouvelle release est publiée
-Documentation=https://github.com/MakFly/ksec
+Documentation=https://github.com/dev-toolings/ksec
 # Sans réseau, il n'y a rien à demander à GitHub — on sort en silence plutôt
 # que d'écrire un échec quotidien dans le journal.
 After=network-online.target

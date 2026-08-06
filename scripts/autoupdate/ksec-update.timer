@@ -1,6 +1,6 @@
 [Unit]
 Description=Vérifie une fois par jour si ksec a une nouvelle release
-Documentation=https://github.com/MakFly/ksec
+Documentation=https://github.com/dev-toolings/ksec
 
 [Timer]
 # Une fois par jour. ksec n'est pas un service exposé : une release qui arrive

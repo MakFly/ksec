@@ -62,4 +62,4 @@ git push origin "$TAG"
 
 echo ""
 echo "  ✓ released ${TAG}"
-echo "  → https://github.com/MakFly/ksec/releases/tag/${TAG}"
+echo "  → https://github.com/dev-toolings/ksec/releases/tag/${TAG}"

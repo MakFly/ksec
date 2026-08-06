@@ -39,13 +39,13 @@ $ ksec scan .
 ### One-liner (Linux / macOS)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/MakFly/ksec/master/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/dev-toolings/ksec/master/install.sh | sh
 ```
 
 ### From source (Rust)
 
 ```bash
-git clone https://github.com/MakFly/ksec.git
+git clone https://github.com/dev-toolings/ksec.git
 cd ksec
 cargo build --release
 cp target/release/ksec ~/.local/bin/
@@ -53,7 +53,7 @@ cp target/release/ksec ~/.local/bin/
 
 ### Pre-built binaries
 
-Binaries for Linux (x86_64, aarch64) and macOS (x86_64, aarch64) are available on the [Releases](https://github.com/MakFly/ksec/releases) page.
+Binaries for Linux (x86_64, aarch64) and macOS (x86_64, aarch64) are available on the [Releases](https://github.com/dev-toolings/ksec/releases) page.
 
 ## Usage
 
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install ksec
         run: |
-          curl -fsSL https://github.com/MakFly/ksec/releases/latest/download/ksec-linux-x86_64 -o /usr/local/bin/ksec
+          curl -fsSL https://github.com/dev-toolings/ksec/releases/latest/download/ksec-linux-x86_64 -o /usr/local/bin/ksec
           chmod +x /usr/local/bin/ksec
       - name: Run scan
         run: ksec scan --min-severity high .
